@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<style>
+	   * {
+			margin: 0;
+			padding: 0;
+	    }
+
+		.wrap {
+			position: relative;
+		}
+
+		.container {
+			width: 100%;
+			height: 200px;
+			overflow: hidden;
+			position: relative;
+		}
+
+		li {
+			width: 100em;
+			height: 200px;
+			float: left;
+		    background: #faebd7;
+		    position: relative;
+		}
+
+		#buttons [data-controls="prev"]{
+   			left: 20px;
+		}
+
+		#buttons [data-controls="next"]{
+   			right: 20px;
+		}
+
+		img{
+			height: 240px;
+		    position: absolute;
+		}
+
+		input {
+			position: absolute;
+			display: block;
+		    top: 35%;
+			list-style: none;
+			border-radius: 50%;
+			border: none;
+			background: #bd7a42;
+			padding: 10px;
+			font-size: 15px;
+            color: #f6f1e2;
+		}
+
+		input:focus, input:hover {
+			overflow: hidden;
+		    border: none;
+		    outline: none;
+		    background-color: #d3cec0;
+		    transform: translateY(3px);
+
+		}
+
+		ul {
+			display: inline-flex;
+			position: relative;
+			list-style: none;
+		}
+	</style>
+</head>
+<body>
+<div class="wrap">
+<div class="container">
+		<ul>
+			<li>1</li>
+			<li>2</li>
+			<li>3</li>
+			<li>4</li>
+			<li>5</li>
+			<li>6</li>
+			<li>7</li>
+		</ul>
+</div>
+<div id="buttons">
+	<input type="button" value="<" data-controls="prev">
+	<input type="button" value=">" data-controls="next">
+</div>
+</div>
+
+<script>
+var ul = document.querySelector("ul");
+
+// Вставляем картинки -----------------------------------------------
+function PreloadImg (images , scene) {
+	this.scene = document.querySelector(scene);
+	this.images = images;
+ 	this.i = 0;
+ 	this.addImg();
+}
+
+PreloadImg.prototype.addImg = function () {
+	var imageArray = new Array();
+        imageArray = this.images.split(',');
+    var imageObj = new Image();
+        for ( this.i=0; this.i <= imageArray.length-1; this.i++) {
+            this.scene.children[this.i].insertAdjacentHTML('beforeend','<img src="' + imageArray[this.i] + '" />');
+            imageObj.src = imageArray[this.i];
+        };
+}
+
+window.addEventListener("DOMContentLoaded", function() { new PreloadImg ("./cat.png,./cat2.png,./cat.png,./cat2.png,./cat.png,./cat2.png,./cat.png" , "ul"); new StyleCenter ("img") });
+
+
+// Ставим картинку по центру ----------------------------------------
+function StyleCenter (elementSenter) {
+	this.elementSenter = document.querySelectorAll(elementSenter);
+	this.addLeft();
+}
+
+StyleCenter.prototype.addLeft = function(){
+	for (var i = 0; i <= this.elementSenter.length-1; i++) {
+	this.elementSenter[i].style.left = ((window.innerWidth/2) - (this.elementSenter[i].clientWidth/2)) + "px";
+	}
+};
+
+window.addEventListener("resize", function() { new StyleCenter ("img") });
+//window.addEventListener("DOMContentLoaded", function() { new StyleCenter ("img") });
+
+
+// Слайдер ----------------------------------------------------------
+function Slider (slider, buttons, parent) {
+	this.parent = document.querySelector(parent);
+	this.slider = document.querySelector(slider);
+	this.buttons = document.querySelector(buttons);
+	this.liWidth = this.slider.firstElementChild.clientWidth;
+	this.ulWidth = this.slider.clientWidth;
+	this.i = 0;
+	this.scrol = true;
+
+	this.parent.addEventListener("mouseover", this.pauseTimeot.bind(this));
+	this.parent.addEventListener("mouseleave", this.startTimeot.bind(this));
+	this.buttons.addEventListener("click", this.start.bind(this));
+	this.slider.addEventListener("wheel", this.scrollSlider.bind(this));
+	//this.slider.addEventListener("DOMSubtreeModified", function(){ this.scrol = true;}.bind(this));
+	this.sliderWidth();
+	this.startTimeot();
+}
+
+// Добавляем ширену слайдера
+Slider.prototype.sliderWidth = function () {
+	this.slider.style.width += (this.slider.children.length) * this.slider.firstElementChild.clientWidth + "px";		
+}
+
+// Двигаемся на следующий слайд 
+Slider.prototype.moveNext = function () {
+	this.i++;
+	var l = (this.ulWidth/this.slider.children.length) * this.i;
+	this.slider.style.cssText += "transform: translate3d("+ -l+"px, 0px, 0px); transition-duration: 0.5s";
+}
+
+Slider.prototype.next = function () {
+	if (this.i == 1) {
+	this.cloneFirst = this.slider.firstElementChild.cloneNode(true);
+	this.slider.appendChild(this.cloneFirst); 
+	this.slider.removeChild(this.slider.firstElementChild);
+    this.i=0;
+	var l = (this.ulWidth/this.slider.children.length) * this.i;
+	this.slider.style.cssText += "transform: translate3d("+ -l+"px, 0px, 0px); transition-duration: 0s";
+	}
+}
+
+// Двигаемся на предыдущий слайд 
+Slider.prototype.prev = function () {
+	if (this.i == 0) {
+	this.cloneLast = this.slider.lastElementChild.cloneNode(true);
+	this.slider.insertBefore(this.cloneLast, this.slider.firstElementChild); 
+	this.slider.removeChild(this.slider.lastElementChild);
+    this.i=1;
+	var l = (this.ulWidth/this.slider.children.length) * this.i;
+	this.slider.style.cssText += "transform: translate3d("+ -l+"px, 0px, 0px); transition-duration: 0s";
+	}
+}
+
+Slider.prototype.movePrev = function () {
+	this.i--;
+	var l = (this.ulWidth/this.slider.children.length) * this.i;
+	this.slider.style.cssText += "transform: translate3d("+ -l+"px, 0px, 0px); transition-duration: 0.8s";
+}
+
+// Запуск слайдера по клику
+Slider.prototype.start = function (e) {
+		var target = event && event.target,
+		    attribut = target.getAttribute("data-controls");
+	if (attribut == "next") {
+		setTimeout(this.moveNext.bind(this),0);
+        this.next();
+
+    } else if (attribut == "prev") {
+     	setTimeout(this.movePrev.bind(this),0);
+        this.prev();
+    }
+}
+
+// Запуск слайдера по таймауту
+Slider.prototype.startTimeot =  function () {
+ 	 	this.timer = setTimeout( function () {
+ 	 		setTimeout(this.moveNext.bind(this),0); 
+ 	 		this.next(); 
+ 	 		this.startTimeot();
+ 	 	}.bind(this), 2000);
+}
+
+// Остановка слайдера по таймауту
+Slider.prototype.pauseTimeot = function () {
+	clearTimeout(this.timer);
+}
+
+
+// Скролл слайдера
+Slider.prototype.scrollSlider = function (e) {
+ 		var delta = e.deltaY;
+		if (delta > 0 && this.scrol == true){
+			setTimeout(this.moveNext.bind(this),0);
+	        this.next();
+	        this.scrol = false;
+		} else if (delta < 0 && this.scrol == true) {
+		    setTimeout(this.movePrev.bind(this),0);
+	        this.prev();
+	        this.scrol = false;
+		} 
+		// else {
+		// 	this.scrol = true;
+		// }
+
+
+
+ // if(e) {
+ // 	var delta = e.deltaY;
+ // 	this.scroll = true;
+	// 		if(delta >= 0) {
+	// 			this.scroll = true;
+	// 			setTimeout(this.moveNext.bind(this),0);
+ //       			 this.next();
+ //       			 this.scroll = false;
+
+	// 		} else {
+	// 			this.scroll = true;
+	// 			setTimeout(this.movePrev.bind(this),0);
+ //        		this.prev();
+ //        		this.scroll = false;
+	// 		}
+		
+	// 	} else {
+	// 		this.scrol = false;
+	// 	}
+
+
+		// if(this.scrol) {
+		// 	if(delta > 0) {
+		// 		setTimeout(this.moveNext.bind(this),0);
+  //      			 this.next();
+
+		// 	} else  if(delta < 0) {
+		// 		setTimeout(this.movePrev.bind(this),0);
+  //       		this.prev();
+		// 	} else {
+		// 		this.scrol= false
+		// 	}
+			
+		// }
+
+//console.log(event.which);
+//console.log(event.onwheel);
+		// if ( this.slider.onwheel ) {
+		//   this.scrol = false;
+		// } else {
+		//   this.scrol = true;
+		// }
+
+}
+
+
+
+// Навигация слайдера
+// Slider.prototype.circle = function () {
+
+// }
+
+window.addEventListener("DOMContentLoaded", function() {
+	 new Slider ("ul" , "#buttons" , ".wrap") 
+});
+
+</script>
+</body>
+</html>
