@@ -90,7 +90,6 @@
 </div>
 
 <script>
-var ul = document.querySelector("ul");
 
 // Вставляем картинки -----------------------------------------------
 function PreloadImg (images , scene) {
@@ -110,7 +109,7 @@ PreloadImg.prototype.addImg = function () {
         };
 }
 
-window.addEventListener("DOMContentLoaded", function() { new PreloadImg ("./cat.png,./cat2.png,./cat.png,./cat2.png,./cat.png,./cat2.png,./cat.png" , "ul"); new StyleCenter ("img") });
+window.addEventListener("DOMContentLoaded", function() { new PreloadImg ("./cat.png,./cat2.png,./cat.png,./cat2.png,./cat.png,./cat2.png,./cat.png" , "ul")  });
 
 
 // Ставим картинку по центру ----------------------------------------
@@ -126,7 +125,7 @@ StyleCenter.prototype.addLeft = function(){
 };
 
 window.addEventListener("resize", function() { new StyleCenter ("img") });
-//window.addEventListener("DOMContentLoaded", function() { new StyleCenter ("img") });
+window.addEventListener("load", function() { new StyleCenter ("img") });
 
 
 // Слайдер ----------------------------------------------------------
@@ -134,16 +133,15 @@ function Slider (slider, buttons, parent) {
 	this.parent = document.querySelector(parent);
 	this.slider = document.querySelector(slider);
 	this.buttons = document.querySelector(buttons);
-	this.liWidth = this.slider.firstElementChild.clientWidth;
-	this.ulWidth = this.slider.clientWidth;
+
 	this.i = 0;
-	this.scrol = true;
+	this.status = true;
 
 	this.parent.addEventListener("mouseover", this.pauseTimeot.bind(this));
 	this.parent.addEventListener("mouseleave", this.startTimeot.bind(this));
-	this.buttons.addEventListener("click", this.start.bind(this));
+	this.buttons.addEventListener("mousedown", this.start.bind(this));
 	this.slider.addEventListener("wheel", this.scrollSlider.bind(this));
-	//this.slider.addEventListener("DOMSubtreeModified", function(){ this.scrol = true;}.bind(this));
+
 	this.sliderWidth();
 	this.startTimeot();
 }
@@ -154,39 +152,26 @@ Slider.prototype.sliderWidth = function () {
 }
 
 // Двигаемся на следующий слайд 
-Slider.prototype.moveNext = function () {
-	this.i++;
-	var l = (this.ulWidth/this.slider.children.length) * this.i;
-	this.slider.style.cssText += "transform: translate3d("+ -l+"px, 0px, 0px); transition-duration: 0.5s";
+Slider.prototype.move = function (i, s) {
+	var l = (this.slider.clientWidth/this.slider.children.length) * i;
+	this.slider.style.cssText += "transform: translate3d("+ -l +"px, 0px, 0px); transition-duration: "+ s +"s";
 }
 
-Slider.prototype.next = function () {
-	if (this.i == 1) {
-	this.cloneFirst = this.slider.firstElementChild.cloneNode(true);
-	this.slider.appendChild(this.cloneFirst); 
-	this.slider.removeChild(this.slider.firstElementChild);
-    this.i=0;
-	var l = (this.ulWidth/this.slider.children.length) * this.i;
-	this.slider.style.cssText += "transform: translate3d("+ -l+"px, 0px, 0px); transition-duration: 0s";
+Slider.prototype.moveNext = function () {
+	setTimeout(function () { this.move(this.i = 1, "0.5"); }.bind(this),0);
+	if (this.i) {
+		this.slider.insertAdjacentElement('beforeEnd', this.slider.firstElementChild);
+		this.move(this.i = 0, "0");
 	}
 }
 
 // Двигаемся на предыдущий слайд 
-Slider.prototype.prev = function () {
-	if (this.i == 0) {
-	this.cloneLast = this.slider.lastElementChild.cloneNode(true);
-	this.slider.insertBefore(this.cloneLast, this.slider.firstElementChild); 
-	this.slider.removeChild(this.slider.lastElementChild);
-    this.i=1;
-	var l = (this.ulWidth/this.slider.children.length) * this.i;
-	this.slider.style.cssText += "transform: translate3d("+ -l+"px, 0px, 0px); transition-duration: 0s";
-	}
-}
-
 Slider.prototype.movePrev = function () {
-	this.i--;
-	var l = (this.ulWidth/this.slider.children.length) * this.i;
-	this.slider.style.cssText += "transform: translate3d("+ -l+"px, 0px, 0px); transition-duration: 0.8s";
+	setTimeout(function () {  this.move(this.i = 0, "0.5"); }.bind(this),0);
+	if (this.i == 0) {
+		this.slider.insertAdjacentElement('afterBegin', this.slider.lastElementChild);
+		this.move(this.i = 1, "0");
+	}
 }
 
 // Запуск слайдера по клику
@@ -194,20 +179,16 @@ Slider.prototype.start = function (e) {
 		var target = event && event.target,
 		    attribut = target.getAttribute("data-controls");
 	if (attribut == "next") {
-		setTimeout(this.moveNext.bind(this),0);
-        this.next();
-
+ 	 		this.moveNext(); 
     } else if (attribut == "prev") {
-     	setTimeout(this.movePrev.bind(this),0);
-        this.prev();
+     		this.movePrev();
     }
 }
 
 // Запуск слайдера по таймауту
 Slider.prototype.startTimeot =  function () {
  	 	this.timer = setTimeout( function () {
- 	 		setTimeout(this.moveNext.bind(this),0); 
- 	 		this.next(); 
+ 	 		this.moveNext(); 
  	 		this.startTimeot();
  	 	}.bind(this), 2000);
 }
@@ -220,73 +201,17 @@ Slider.prototype.pauseTimeot = function () {
 
 // Скролл слайдера
 Slider.prototype.scrollSlider = function (e) {
- 		var delta = e.deltaY;
-		if (delta > 0 && this.scrol == true){
-			setTimeout(this.moveNext.bind(this),0);
-	        this.next();
-	        this.scrol = false;
-		} else if (delta < 0 && this.scrol == true) {
-		    setTimeout(this.movePrev.bind(this),0);
-	        this.prev();
-	        this.scrol = false;
-		} 
-		// else {
-		// 	this.scrol = true;
-		// }
-
-
-
- // if(e) {
- // 	var delta = e.deltaY;
- // 	this.scroll = true;
-	// 		if(delta >= 0) {
-	// 			this.scroll = true;
-	// 			setTimeout(this.moveNext.bind(this),0);
- //       			 this.next();
- //       			 this.scroll = false;
-
-	// 		} else {
-	// 			this.scroll = true;
-	// 			setTimeout(this.movePrev.bind(this),0);
- //        		this.prev();
- //        		this.scroll = false;
-	// 		}
-		
-	// 	} else {
-	// 		this.scrol = false;
-	// 	}
-
-
-		// if(this.scrol) {
-		// 	if(delta > 0) {
-		// 		setTimeout(this.moveNext.bind(this),0);
-  //      			 this.next();
-
-		// 	} else  if(delta < 0) {
-		// 		setTimeout(this.movePrev.bind(this),0);
-  //       		this.prev();
-		// 	} else {
-		// 		this.scrol= false
-		// 	}
-			
-		// }
-
-//console.log(event.which);
-//console.log(event.onwheel);
-		// if ( this.slider.onwheel ) {
-		//   this.scrol = false;
-		// } else {
-		//   this.scrol = true;
-		// }
-
+ 	var delta = e.deltaY;
+	if (delta > 0 && this.status == true){
+		this.moveNext();
+	    this.status = false;
+	    setTimeout(function() { this.status = true; }.bind(this),1200);
+	} else if (delta < 0 && this.status == true) {
+	    this.movePrev();
+	    this.status = false;
+	    setTimeout(function() { this.status = true; }.bind(this),1200);
+	} 
 }
-
-
-
-// Навигация слайдера
-// Slider.prototype.circle = function () {
-
-// }
 
 window.addEventListener("DOMContentLoaded", function() {
 	 new Slider ("ul" , "#buttons" , ".wrap") 
